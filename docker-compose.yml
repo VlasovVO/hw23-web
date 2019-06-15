@@ -1,0 +1,62 @@
+version: '2'  
+services:  
+  nginx:
+    image: nginx:alpine
+    container_name: nz01
+    ports:
+      - "80:80"
+      - "8000:8000"
+      - "90:90"
+    volumes:
+      - ./src:/src
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./wordpress:/var/www/html
+    depends_on:
+      - web
+    restart: always
+  wordpress:
+    image: wordpress:4.7.1-php7.0-fpm
+    ports:
+      - '9000:9000'
+    volumes:
+      - ./wordpress:/var/www/html
+    environment:
+      - WORDPRESS_DB_NAME=wpdb
+      - WORDPRESS_TABLE_PREFIX=wp_
+      - WORDPRESS_DB_HOST=mysql
+      - WORDPRESS_DB_PASSWORD=aqwe123
+    restart: always
+  mysql:
+    image: mariadb
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./db-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=aqwe123
+    restart: always
+  web:
+    build: .
+    container_name: dz01
+    depends_on:
+      - db
+    volumes:
+      - ./src:/src
+    expose:
+      - "8000"
+    links:
+      - redis
+  db:
+    image: postgres:alpine
+    container_name: pz01
+  redis:
+    image: redis:alpine
+    container_name: rz01
+    ports:
+     - '6379:6379'
+  tomcat:
+    image: tomcat:8
+    volumes:
+    - ./server.xml:/usr/local/tomcat/conf/server.xml:ro
+    ports:
+    - 8080:8080
